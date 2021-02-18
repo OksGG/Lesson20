@@ -1,8 +1,6 @@
 package gusakova;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.*;
 
@@ -19,14 +17,12 @@ public class StreamAPITest {
         double lastPrice = 0;
         double totalPrice = 0;
         StringBuilder stringBuilder = new StringBuilder();
-        List<String> listProduct = new ArrayList<String>();
+        HashMap<String, Double> listProduct = new HashMap<>();
         List<Double> listPrice = new ArrayList<Double>();
-
         while ((strLine = br.readLine()) != null) {
             switch (count) {
                 case 0:
                     lastProduct = strLine;
-                    listProduct.add(strLine);
                     break;
                 case 1:
                     lastCount = Double.parseDouble(strLine);
@@ -35,6 +31,7 @@ public class StreamAPITest {
                 case 2:
                     lastPrice = Double.parseDouble(strLine);
                     listPrice.add(Double.parseDouble(strLine));
+                    listProduct.put(lastProduct, lastPrice);
             }
             count++;
             if (count == 3) {
@@ -50,11 +47,20 @@ public class StreamAPITest {
         stringBuilder.append("\nИтого:              " + String.format("%.2f", totalPrice));
         System.out.println(stringBuilder.toString());
         System.out.println(listProduct);
-        Stream stream = listProduct.stream();
-        System.out.println(stream.count());
-        Optional<Double> min = listPrice.stream().min(Double::compareTo);
-        System.out.println(min);
-        System.out.println(listPrice.stream().mapToInt((s) -> (int) Double.parseDouble(String.valueOf((s)))).average());
+        Map<String, Double> collect = listProduct.entrySet().stream()
+                .filter(x -> x.getValue() >= 200.00)
+                .collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()));
+        System.out.println("Фильтр по цене" + collect);
+        Stream stream = collect.entrySet().stream();
+        System.out.println("Всего товаров с фильтом по цене: " + stream.count());
+        Map.Entry<String, Double> min = Collections.min(listProduct.entrySet(),
+                Comparator.comparing(Map.Entry::getValue));
+        System.out.println("Продукт с минимальной ценой: " + min);
+        System.out.println(listPrice);
+        double average = listPrice.stream().mapToDouble(a -> a).average().orElse(0);
+        System.out.println("Средняя цена товаров: " + average);
+
 
     }
+
 }
